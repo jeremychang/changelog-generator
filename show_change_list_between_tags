@@ -1,0 +1,35 @@
+#!/bin/bash
+if [ -z $1 ] ; then
+  exit -1
+fi
+if [ -z $2 ] ; then
+  exit -1
+fi
+START=$1
+END=$2
+git rev-parse $1 >/dev/null 2>&1
+START_EXISTED=$?
+git rev-parse $2 >/dev/null 2>&1
+END_EXISTED=$?
+#echo "start_existed=" $START_EXISTED
+#echo "end_existed=" $END_EXISTED
+if [ "$START_EXISTED" == "0" ] ; then
+  GITDESCRIBE=$(git describe --dirty --match $START 2>/dev/null)
+  #echo "DESCRIBE="$GITDESCRIBE
+  DISTANCE=$(expr "${GITDESCRIBE}" : '.*-\([0-9]*\)-g.*')
+elif [ "$START_EXISTED" != "0" ] && [ "$END_EXISTED" == "0" ] ; then
+  DISTANCE=`git rev-list --count HEAD`
+fi
+#echo "DISTANCE="$DISTANCE
+
+if [ ! -z $DISTANCE ] ; then
+  echo "$REPO_PATH $REPO_PROJECT  ($DISTANCE commits)"
+  #git rev-list --pretty=format:"%h%x09%an%x09%ad%x09%s" $START..$END
+  #git rev-list --pretty=format:"%h%x09%an%x09%ad%x09%s" --date=short $START..$END
+  if [ "$START_EXISTED" == "0" ] ; then
+  git --no-pager log --pretty=format:"%h%x09%an%x09%ad%x09%s" --date=short $START..$END
+  else
+  git --no-pager log --pretty=format:"%h%x09%an%x09%ad%x09%s" --date=short $END
+  fi
+  echo ""
+fi
